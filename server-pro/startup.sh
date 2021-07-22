@@ -28,7 +28,7 @@ verify_installation(){
    echo "==VERIFY INSTALLATION==";
    mkdir -p $DIAGNOSTIC_DIR
    chmod 777 $DIAGNOSTIC_DIR
-   rstudio-server verify-installation --verify-user=$RSP_TESTUSER | tee $DIAGNOSTIC_DIR/verify.log 
+   rstudio-server verify-installation --verify-user=$RSP_TESTUSER | tee $DIAGNOSTIC_DIR/verify.log
 }
 
 # touch log files to initialize them
@@ -65,7 +65,7 @@ else
         echo "Empty 'RSP_TESTUSER' variables, not creating test user";
     else
         useradd -m -s /bin/bash -N -u $RSP_TESTUSER_UID $RSP_TESTUSER
-        echo "$RSP_TESTUSER:$RSP_TESTUSER_PASSWD" | sudo chpasswd
+        echo -n "$RSP_TESTUSER:$RSP_TESTUSER_PASSWD" | sudo chpasswd
     fi
 fi
 
@@ -77,7 +77,7 @@ fi
 
 # Check diagnostic configurations
 if [ "$DIAGNOSTIC_ENABLE" == "true" ]; then
-  verify_installation 
+  verify_installation
   if [ "$DIAGNOSTIC_ONLY" == "true" ]; then
     echo $(<$DIAGNOSTIC_DIR/verify.log);
     echo "Exiting script because DIAGNOSTIC_ONLY=${DIAGNOSTIC_ONLY}";

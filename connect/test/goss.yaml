@@ -13,6 +13,10 @@ package:
   rstudio-connect:
     installed: true
 
+port:
+  tcp6:3939:
+    listening: true
+
 file:
   /etc/rstudio-connect/license.lic:
     # Currently does not exist

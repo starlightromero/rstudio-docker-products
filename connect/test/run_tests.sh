@@ -2,6 +2,7 @@
 
 # start connect
 tini -- /usr/local/bin/startup.sh >/tmp/startup.log 2>&1 &
+sleep 5
 
 GOSS_FILE=${GOSS_FILE:-/tmp/goss.yaml}
 GOSS_VARS=${GOSS_VARS:-/tmp/goss_vars.yaml}

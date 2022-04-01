@@ -52,3 +52,5 @@ services:
     volumes:
       - ./package-manager/rstudio-pm.gcfg:/etc/rstudio-pm/rstudio-pm.gcfg
       - ./data/rspm:/data
+      - ./data/rspm_mnt:/mnt
+

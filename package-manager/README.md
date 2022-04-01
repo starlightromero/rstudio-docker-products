@@ -123,6 +123,50 @@ docker exec -it {container-id} /bin/bash
 Then please refer to the [RSPM guide](https://docs.rstudio.com/rspm/admin/) on how
 to [create and manage](https://docs.rstudio.com/rspm/admin/getting-started/configuration/) your repositories.
 
+#### example of adding a local tarball
+
+For this example, a package, `demo1` was created with version 0.0.0.9000 and a 
+tarball was created using `devtools::build()`
+
+Copy the tarball into the rspm_mnt dir:
+
+```bash
+# will need sudo as otherwise will get permission denied as the rspm_mnt will 
+# be owned by root
+sudo cp demo1_0.0.0.9000.tar.gz /<path/to>/rstudio-docker-products/da
+ta/rspm_mnt/
+```
+
+within the docker container, the tarball will be available
+under `/mnt` you can now add the tarball as a source,
+then create/subscribe a repo to the source
+
+```bash
+root@fe7d3b816983:/# rspm create source --name=demopkgs
+Source 'demopkgs':
+  Type:  Local
+root@fe7d3b816983:/# rspm add --source=demopkgs --path='/mnt/demo1_0.0.0.9000.tar.gz'
+Added package '/mnt/demo1_0.0.0.9000.tar.gz'.
+root@fe7d3b816983:/# rspm create repo --name=demopkgs --description="demo package repo"
+Repository: demopkgs - demo package repo - R
+root@fe7d3b816983:/# rspm subscribe --repo=demopkgs --source=demopkgs
+Repository: demopkgs
+Sources:
+--demopkgs (Local)
+```
+
+It can then be installed from R on the local machine:
+
+```R
+> options(repos = c(DEMOPKGS = "http://localhost:4242/demopkgs/latest"))
+> install.packages("demo1")
+installing the source package ‘demo1’
+
+trying URL 'http://localhost:4242/demopkgs/latest/src/contrib/demo1_0.0.0.9000.tar.gz'
+Content type 'application/x-gzip' length 919 bytes
+downloaded 919 bytes
+```
+
 # Licensing
 
 The license associated with the RStudio Docker Products repository is located [in LICENSE.md](https://github.com/rstudio/rstudio-docker-products/blob/main/LICENSE.md).

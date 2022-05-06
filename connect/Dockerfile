@@ -96,11 +96,10 @@ ARG TINI_VERSION=0.18.0
 RUN curl -L -o /usr/local/bin/tini https://github.com/krallin/tini/releases/download/v${TINI_VERSION}/tini && \
     chmod +x /usr/local/bin/tini
 
-COPY startup.sh /usr/local/bin/startup.sh
-RUN chmod +x /usr/local/bin/startup.sh
+COPY --chmod=0775 startup.sh /usr/local/bin/startup.sh
 
 # Download RStudio Connect -----------------------------------------------------#
-ARG RSC_VERSION=2022.02.3
+ARG RSC_VERSION=2022.04.1
 SHELL [ "/bin/bash", "-o", "pipefail", "-c"]
 RUN apt-get update --fix-missing \
     && RSC_VERSION_URL=`echo -n "${RSC_VERSION}" | sed 's/+/%2B/g'` \

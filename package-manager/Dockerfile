@@ -9,16 +9,6 @@ ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
 ENV DEBIAN_FRONTEND=noninteractive
 
-# hadolint ignore=DL3008,DL3009
-RUN apt-get update --fix-missing \
-    && apt-get install -y --no-install-recommends \
-        gdebi-core \
-        libssl1.0.0 \
-        libssl-dev \
-	sudo \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
 ENV PATH /opt/rstudio-pm/bin:$PATH
 
 # Runtime settings ------------------------------------------------------------#
@@ -26,19 +16,23 @@ ARG TINI_VERSION=0.18.0
 RUN curl -L -o /usr/local/bin/tini https://github.com/krallin/tini/releases/download/v${TINI_VERSION}/tini && \
     chmod +x /usr/local/bin/tini
 
-COPY startup.sh /usr/local/bin/startup.sh
-RUN chmod +x /usr/local/bin/startup.sh
+COPY --chmod=0775 startup.sh /usr/local/bin/startup.sh
 
 EXPOSE 4242/tcp
 EXPOSE 2112/tcp
 
 # Download RStudio Package Manager ---------------------------------------------#
-ARG RSPM_VERSION=2021.12.0-3
+ARG RSPM_VERSION=2022.04.0-7
 ARG RSPM_DOWNLOAD_URL=https://cdn.rstudio.com/package-manager/ubuntu/amd64
 RUN apt-get update --fix-missing \
+    && apt-get install -y --no-install-recommends gdebi-core dpkg-sig \
     && curl -O ${RSPM_DOWNLOAD_URL}/rstudio-pm_${RSPM_VERSION}_amd64.deb \
+    && gpg --keyserver keyserver.ubuntu.com --recv-keys 3F32EE77E331692F \
+    && dpkg-sig --verify rstudio-pm_${RSPM_VERSION}_amd64.deb \
     && RSTUDIO_INSTALL_NO_LICENSE_INITIALIZATION=1 gdebi -n rstudio-pm_${RSPM_VERSION}_amd64.deb \
     && rm rstudio-pm_${RSPM_VERSION}_amd64.deb \
+    && apt-get purge -y gdebi-core dpkg-sig \
+    && apt-get autoremove -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && ln -s /opt/rstudio-pm/bin/rspm /usr/local/bin/rspm

@@ -123,33 +123,38 @@ docker exec -it {container-id} /bin/bash
 Then please refer to the [RSPM guide](https://docs.rstudio.com/rspm/admin/) on how
 to [create and manage](https://docs.rstudio.com/rspm/admin/getting-started/configuration/) your repositories.
 
-#### example of adding a local tarball
+#### example of adding a local tarball built in rsw to rspm
 
-For this example, a package, `demo1` was created with version 0.0.0.9000 and a 
-tarball was created using `devtools::build()`
+For this example, a package, `demo1` was created with version 0.1.0 and a 
+tarball was created using the build pane in rsw. This will write out the
+tarball on the host system at `data/rsw/rstudio/demo1_0.1.0.tar.gz`
 
-Copy the tarball into the rspm_mnt dir:
+Copy the tarball into the `/tmp` dir using `docker cp`:
+
+Find the container id for the running package-manager container via `docker ps`:
 
 ```bash
-# will need sudo as otherwise will get permission denied as the rspm_mnt will 
-# be owned by root
-sudo cp demo1_0.0.0.9000.tar.gz /<path/to>/rstudio-docker-products/da
-ta/rspm_mnt/
+❯ docker ps
+CONTAINER ID   IMAGE ...
+b8ae944b7f2d   rstudio/rstudio-package-manager:2021.12.0-3 ...
 ```
 
-within the docker container, the tarball will be available
-under `/mnt` you can now add the tarball as a source,
-then create/subscribe a repo to the source
+```bash
+# replace b8ae944b7f2d with your container ID
+docker cp data/rsw/rstudio/demo1_0.1.0.tar.gz b8ae944b7f2d:/tmp
+```
+
+now you can create the repo in rspm
 
 ```bash
-root@fe7d3b816983:/# rspm create source --name=demopkgs
+root@1b6f4f5fc669:/# rspm create source --name=demopkgs
 Source 'demopkgs':
   Type:  Local
-root@fe7d3b816983:/# rspm add --source=demopkgs --path='/mnt/demo1_0.0.0.9000.tar.gz'
-Added package '/mnt/demo1_0.0.0.9000.tar.gz'.
-root@fe7d3b816983:/# rspm create repo --name=demopkgs --description="demo package repo"
+root@1b6f4f5fc669:/# rspm add --source=demopkgs --path='/tmp/demo1_0.1.0.tar.gz'
+Added package '/tmp/demo1_0.1.0.tar.gz'.
+root@1b6f4f5fc669:/# rspm create repo --name=demopkgs --description="demo package repo"
 Repository: demopkgs - demo package repo - R
-root@fe7d3b816983:/# rspm subscribe --repo=demopkgs --source=demopkgs
+root@1b6f4f5fc669:/# rspm subscribe --repo=demopkgs --source=demopkgs
 Repository: demopkgs
 Sources:
 --demopkgs (Local)
@@ -158,13 +163,28 @@ Sources:
 It can then be installed from R on the local machine:
 
 ```R
-> options(repos = c(DEMOPKGS = "http://localhost:4242/demopkgs/latest"))
-> install.packages("demo1")
-installing the source package ‘demo1’
+> install.packages("demo1", repos = "http://rstudio-package-manager:4242/demopkgs/latest")
+Installing package into ‘/home/rstudio/R/x86_64-pc-linux-gnu-library/3.6’
+(as ‘lib’ is unspecified)
+trying URL 'http://rstudio-package-manager:4242/demopkgs/latest/src/contrib/demo1_0.1.0.tar.gz'
+Content type 'application/x-gzip' length 859 bytes
+==================================================
+downloaded 859 bytes
 
-trying URL 'http://localhost:4242/demopkgs/latest/src/contrib/demo1_0.0.0.9000.tar.gz'
-Content type 'application/x-gzip' length 919 bytes
-downloaded 919 bytes
+* installing *source* package ‘demo1’ ...
+** using staged installation
+** R
+** byte-compile and prepare package for lazy loading
+** help
+*** installing help indices
+** building package indices
+** testing if installed package can be loaded from temporary location
+** testing if installed package can be loaded from final location
+** testing if installed package keeps a record of temporary installation path
+* DONE (demo1)
+
+The downloaded source packages are in
+	‘/tmp/RtmpRVTKFG/downloaded_packages’
 ```
 
 # Licensing
